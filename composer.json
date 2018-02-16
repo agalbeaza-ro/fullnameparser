@@ -1,10 +1,9 @@
 {
     "name": "agalbeaza-ro/fullnameparser",
-    "description": "RealPage Property OS Common Infrastructure scripts and config",
-    "license": "proprietary",
+    "description": "Full Name Parser",
     "authors": [
         {
-            "name": "Foundation DevOps",
+            "name": "Alexandra Galbeaza",
             "email": "agalbeaza@softia.ro"
         }
     ],
