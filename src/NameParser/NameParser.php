@@ -94,13 +94,13 @@ class NameParser {
      * @param string $name the full name you wish to parse
      * @return array returns associative array of name parts
      */
-    public static function parse($name, $fixCase = false) {
+    public static function parseFullName($name) {
         $parser = new self();
 
-        return $parser->handleParse($name, true );
+        return $parser->handleParse($name);
     }
 
-    private function handleParse($nameToParse, $fixCase) {
+    private function handleParse($nameToParse) {
         $partsFound = array();
 
         preg_match_all("/\s(?:[‘’']([^‘’']+)[‘’']|[“”\"]([^“”\"]+)[“”\"]|\[([^\]]+)\]|\(([^\)]+)\)),?\s/", ' ' . $nameToParse . ' ', $partFound);
@@ -138,7 +138,7 @@ class NameParser {
         }
 
         if (strlen(trim($nameToParse)) == 0) {
-            $this->parsedName = $this->fixParsedNameCase($this->parsedName, $fixCase);
+            $this->parsedName = $this->fixParsedNameCase($this->parsedName);
             return $this->parsedName;
         }
 
@@ -188,7 +188,7 @@ class NameParser {
             $partsFound = array();
         }
         if (count($this->nameParts) == 0) {
-            $this->parsedName = $this->fixParsedNameCase($this->parsedName, $fixCase);
+            $this->parsedName = $this->fixParsedNameCase($this->parsedName);
             return $this->parsedName;
         }
 
@@ -224,7 +224,7 @@ class NameParser {
             $partsFound = array();
         }
         if (count($this->nameParts) == 0) {
-            $this->parsedName = $this->fixParsedNameCase($this->parsedName, $fixCase);
+            $this->parsedName = $this->fixParsedNameCase($this->parsedName);
             return $this->parsedName;
         }
 
@@ -294,7 +294,7 @@ class NameParser {
         }
 
         if (count($this->nameParts) == 0) {
-            $this->parsedName = $this->fixParsedNameCase($this->parsedName, $fixCase);
+            $this->parsedName = $this->fixParsedNameCase($this->parsedName);
             return $this->parsedName;
         }
 
@@ -302,86 +302,83 @@ class NameParser {
         $this->parsedName['first'] = array_shift($this->nameParts);
 
         if (count($this->nameParts) == 0) {
-            $this->parsedName = $this->fixParsedNameCase($this->parsedName, $fixCase);
+            $this->parsedName = $this->fixParsedNameCase($this->parsedName);
             return $this->parsedName;
         }
 
 
         // Middle name: store all remaining parts as middle name
         $this->parsedName['middle'] = implode(' ', $this->nameParts);
-        $this->parsedName = $this->fixParsedNameCase($this->parsedName, $fixCase);
+        $this->parsedName = $this->fixParsedNameCase($this->parsedName);
 
         return $this->parsedName;
     }
 
-    private function fixParsedNameCase($fixedCaseName, $fixCaseNow) {
+    private function fixParsedNameCase($fixedCaseName) {
         $forceCaseList = array('e', 'y', 'av', 'af', 'da', 'dal', 'de', 'del', 'der', 'di',
             'la', 'le', 'van', 'der', 'den', 'vel', 'von', 'II', 'III', 'IV', 'J.D.', 'LL.M.',
             'M.D.', 'D.O.', 'D.C.', 'Ph.D.');
 
         $mcCase = array('mc', 'mac', 'de', 'o\'');
 
-        $namePartLabels = array_keys($this->parsedName);
         $namePartWords = array();
         $namePartsKeys = array_keys($this->parsedName);
 
-        if ($fixCaseNow) {
+        foreach ($this->parsedName as $key => $value) {
 
-            foreach ($this->parsedName as $key => $value) {
+            if ($fixedCaseName[$key]) {
 
-                if ($fixedCaseName[$key]) {
+                $namePartWords = explode(' ', $fixedCaseName[$key]);
 
-                    $namePartWords = explode(' ', $fixedCaseName[$key]);
+                for ($i = 0; $i < count($namePartWords); $i++) {
 
-                    for ($i = 0; $i < count($namePartWords); $i++) {
+                    $lowerCaseList = array_map('strtolower', $forceCaseList);
+                    $forceCaseListIndex = array_search(strtolower($namePartWords[$i]), $lowerCaseList);
 
-                        $lowerCaseList = array_map('strtolower', $forceCaseList);
-                        $forceCaseListIndex = array_search(strtolower($namePartWords[$i]), $lowerCaseList);
-
-                        if ($forceCaseListIndex !== false) { // Set case of words in forceCaseList
-                            $namePartWords[$i] = $forceCaseList[$forceCaseListIndex];
-                        } else if (strlen($namePartWords[$i]) === 1) { // Uppercase initials
-                            $namePartWords[$i] = strtoupper($namePartWords[$i]);
-                        } else
-                            if (
-                                strlen($namePartWords[$i]) > 2 &&
-                                substr($namePartWords[$i], 0, 1) === strtoupper(substr($namePartWords[$i], 0, 1)) &&
-                                substr($namePartWords[$i], 1, 2) === strtolower(substr($namePartWords[$i], 1, 2)) &&
-                                substr($namePartWords[$i], 2) === strtoupper(substr($namePartWords[$i], 2))
-                            ) { // Detect McCASE and convert to McCase
-                                $namePartWords[$i] = substr($namePartWords[$i], 0, 3) .
-                                    strtolower(substr($namePartWords[$i], 3));
-                            } else if (
-                                $namePartsKeys[$i] === 'suffix' &&
-                                substr($this->nameParts[$i], -1) !== '.' &&
-                                array_search(strtolower($this->nameParts[$i]), $this->suffixList) === false
-                            ) { // Convert suffix abbreviations to UPPER CASE
-                                if ($namePartWords[$i] === strtolower($namePartWords[$i])) {
-                                    $namePartWords[$i] = strtoupper($namePartWords[$i]);
-                                }
-                            } else { // Convert to Title Case
-                                $namePartWords[$i] = strtoupper(substr($namePartWords[$i], 0, 1)) .
-                                    strtolower(substr($namePartWords[$i], 1));
-                                // Detect mccase and convert to McCase
-                                if (array_search(strtolower(substr($namePartWords[$i], 0, 2)), $mcCase) !== false) {
-                                    $namePartWords[$i] = strtoupper(substr($namePartWords[$i], 0, 1)) .
-                                        substr($namePartWords[$i], 1, 1) .
-                                        strtoupper(substr($namePartWords[$i], 2, 1)) .
-                                        substr($namePartWords[$i], 3);
-                                }
-
-                                if (array_search(strtolower(substr($namePartWords[$i], 0, 3)), $mcCase) !== false) {
-                                    $namePartWords[$i] = strtoupper(substr($namePartWords[$i], 0, 1)) .
-                                        substr($namePartWords[$i], 1, 2) .
-                                        strtoupper(substr($namePartWords[$i], 3, 1)) .
-                                        substr($namePartWords[$i], 4);
-                                }
+                    if ($forceCaseListIndex !== false) { // Set case of words in forceCaseList
+                        $namePartWords[$i] = $forceCaseList[$forceCaseListIndex];
+                    } else if (strlen($namePartWords[$i]) === 1) { // Uppercase initials
+                        $namePartWords[$i] = strtoupper($namePartWords[$i]);
+                    } else
+                        if (
+                            strlen($namePartWords[$i]) > 2 &&
+                            substr($namePartWords[$i], 0, 1) === strtoupper(substr($namePartWords[$i], 0, 1)) &&
+                            substr($namePartWords[$i], 1, 2) === strtolower(substr($namePartWords[$i], 1, 2)) &&
+                            substr($namePartWords[$i], 2) === strtoupper(substr($namePartWords[$i], 2))
+                        ) { // Detect McCASE and convert to McCase
+                            $namePartWords[$i] = substr($namePartWords[$i], 0, 3) .
+                                strtolower(substr($namePartWords[$i], 3));
+                        } else if (
+                            $namePartsKeys[$i] === 'suffix' &&
+                            substr($this->nameParts[$i], -1) !== '.' &&
+                            array_search(strtolower($this->nameParts[$i]), $this->suffixList) === false
+                        ) { // Convert suffix abbreviations to UPPER CASE
+                            if ($namePartWords[$i] === strtolower($namePartWords[$i])) {
+                                $namePartWords[$i] = strtoupper($namePartWords[$i]);
                             }
-                    }
-                    $fixedCaseName[$key] = implode(" ", $namePartWords);
+                        } else { // Convert to Title Case
+                            $namePartWords[$i] = strtoupper(substr($namePartWords[$i], 0, 1)) .
+                                strtolower(substr($namePartWords[$i], 1));
+                            // Detect mccase and convert to McCase
+                            if (array_search(strtolower(substr($namePartWords[$i], 0, 2)), $mcCase) !== false) {
+                                $namePartWords[$i] = strtoupper(substr($namePartWords[$i], 0, 1)) .
+                                    substr($namePartWords[$i], 1, 1) .
+                                    strtoupper(substr($namePartWords[$i], 2, 1)) .
+                                    substr($namePartWords[$i], 3);
+                            }
+
+                            if (array_search(strtolower(substr($namePartWords[$i], 0, 3)), $mcCase) !== false) {
+                                $namePartWords[$i] = strtoupper(substr($namePartWords[$i], 0, 1)) .
+                                    substr($namePartWords[$i], 1, 2) .
+                                    strtoupper(substr($namePartWords[$i], 3, 1)) .
+                                    substr($namePartWords[$i], 4);
+                            }
+                        }
                 }
+                $fixedCaseName[$key] = implode(" ", $namePartWords);
             }
         }
+
         return $fixedCaseName;
     }
 

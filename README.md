@@ -1,34 +1,98 @@
-PHP-Name-Parser For Laravel 5
-===============
+## Description
 
-PHP library to split names into their respective components.  Besides detecting first and last names, this library attempts to handle prefixes, suffixes, initials and compound last names like "Von Fange".  It also normalizes prefixes (Mister -> Mr.) and fixes capitalization (JOHN SMITH -> John Smith).
+parseFullName() is designed to parse large batches of full names in multiple
+inconsistent formats, as from a database, and continue processing without error,
+even if given some unparsable garbage entries.
 
-**Usage:**
-Enter command
+parseFullName("MACDONALT, Mr. JÜAN MARTINEZ (MARTIN) Jr."):
 
-```js
-"composer require naviocean/laravel-nameparser:dev-master"
-```
+<pre>
+array:6 [
+  "title" => "Mr."
+  "first" => "JÜan"
+  "middle" => "Martinez"
+  "last" => "MacDonalt"
+  "nick" => "Martin"
+  "suffix" => "Jr."
+]
+</pre>
 
-**Results:**
+1. accepts a string containing a person's full name, in any format,
+2. analyzes and attempts to detect the format of that name,
+3. (if possible) parses the name into its component parts, and
+4. (by default) returns an object containing all individual parts of the name:
+    - title (string): title(s) (e.g. "Ms." or "Dr.")
+    - first (string): first name or initial
+    - middle (string): middle name(s) or initial(s)
+    - last (string): last name or initial
+    - nick (string): nickname(s)
+    - suffix (string): suffix(es) (e.g. "Jr.", "II", or "Esq.")
 
-    Array (
-    	   [nick] => ''
-        [title] => Mr.
-        [first] => Anthony
-        [middle] => ''
-        [last] => Von Fange
-        [suffix] => III
-    )
+Optionally, parseFullName() can also:
 
-**The algorithm:**
+* return only the specified part of a name as a string (or errors as an array)
+* always fix or ignore the letter case of the returned parts (the default is
+    to fix the case only when the original input is all upper or all lowercase)
+* stop on errors (the default is to return warning messages in the output,
+    but never throw a JavaScript error, no matter how mangled the input)
+* detect more variations of name prefixes, suffixes, and titles (the default
+    detects 29 prefixes, 19 suffixes, 16 titles, and 8 conjunctions, but it
+    can be set to detect 97 prefixes, 23 suffixes, and 204 titles instead)
 
-We start by splitting the full name into separate words. We then do a dictionary lookup on the first and last words to see if they are a common prefix or suffix. Next, we take the middle portion of the string (everything minus the prefix & suffix) and look at everything except the last word of that string. We then loop through each of those words concatenating them together to make up the first name. While we’re doing that, we watch for any indication of a compound last name. It turns out that almost every compound last name starts with 1 of 16 prefixes (Von, Van, Vere, etc). If we see one of those prefixes, we break out of the first name loop and move on to concatenating the last name. We handle the capitalization issue by checking for camel-case before uppercasing the first letter of each word and lowercasing everything else. I wrote special cases for periods and dashes. We also have a couple other special cases, like ignoring words in parentheses all-together.
+If this is not what you're looking for, is overkill for your application, or
+is in the wrong language, check the "Credits" section at the end of this file
+for links to several other excellent parsers which may suit your needs better.
 
-Check examples.php for the test suite and examples of how various name formats are parsed.
+## Credits and precursors
 
-**Credits & license:**
+Before creating this function I studied many other name-parsing functions.
+None quite suited my needs, but many are excellent at what they do, and
+this function uses ideas from several of them.
 
-* Read more about the inspiration for this [PHP Name Parser](http://www.onlineaspect.com/2009/08/17/splitting-names/) library
-* Special thanks to [Josh Fraser](http://joshfraser.com), [Josh Jones](https://github.com/UberNerdBoy), [Timothy Wood](https://github.com/codearachnid), [Michael Waskosky](https://github.com/waskosky), [Eric Celeste](https://github.com/efc) and [Josh Houghtelin](https://github.com/jhoughtelin) for their contributions.  Pull requests are always welcome as long as you don't break the test suite.
-* Released under Apache 2.0 license
+My thanks to all the following developers for sharing their work.
+
+David Schnell-Davis's parse-full-name javascript plugin:
+https://github.com/dschnelldavis/parse-full-name
+
+Josh Fraser's PHP-Name-Parser:
+https://github.com/joshfraser/PHP-Name-Parser
+
+Josh Fraser's JavaScript-Name-Parser:
+https://github.com/joshfraser/JavaScript-Name-Parser
+
+Garve Hays' Java NameParser:
+https://github.com/gkhays/NameParser
+
+Jason Priem's PHP HumanNameParser:
+https://web.archive.org/web/20150408022642/http://jasonpriem.org/human-name-parse/ and
+https://github.com/jasonpriem/HumanNameParser.php
+
+Keith Beckman's PHP nameparse:
+http://alphahelical.com/code/misc/nameparse/
+
+Jed Hartman's PHP normalize_name:
+http://www.kith.org/journals/jed/2007/02/11/3813.html and
+http://www.kith.org/logos/things/code/name-parser-php.html
+
+ashaffer88's JavaScript parse-name:
+https://github.com/weo-edu/parse-name and
+https://www.npmjs.com/package/parse-name
+
+Derek Gulbranson's Python nameparser:
+https://github.com/derek73/python-nameparser/
+
+Discussion about how to change all upper or lowercase names to correct case:
+http://stackoverflow.com/questions/11529213/given-upper-case-names-transform-to-proper-case-handling-ohara-mcdonald
+
+Title lists modified from:
+http://www.codeproject.com/Questions/262876/Titles-or-Salutation-list
+
+Suffix lists modified from:
+http://en.wikipedia.org/wiki/Suffix_(name) and
+https://github.com/derek73/python-nameparser/blob/master/nameparser/config/suffixes.py
+
+Prefix lists modified from:
+http://en.wikipedia.org/wiki/List_of_family_name_affixes
+
+Conjunction list copied entirely from:
+https://github.com/derek73/python-nameparser/blob/master/nameparser/config/conjunctions.py
