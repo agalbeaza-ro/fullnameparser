@@ -1,0 +1,20 @@
+{
+    "name": "agalbeaza-ro/fullnameparser",
+    "description": "RealPage Property OS Common Infrastructure scripts and config",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Foundation DevOps",
+            "email": "foundation-devops@realpage.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "~7"
+    },
+    "autoload": {
+        "psr-4": {
+            "FullNameParser": "src/"
+        }
+    }
+}
